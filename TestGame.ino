@@ -12,6 +12,8 @@ int selectedOption = 0;
 TangramPiece pieces[7];
 int selectedPiece = 0;
 bool pieceGrabbed = false;
+LevelState currentLevel;
+GameState gameState;
 
 void setup() {
   arduboy.begin();
