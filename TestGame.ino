@@ -13,6 +13,10 @@ TangramPiece pieces[7];
 int selectedPiece = 0;
 bool pieceGrabbed = false;
 
+LevelState currentLevel;
+GameState gameState;
+Cursor cursor; // Добавляем если используется
+
 void setup() {
   arduboy.begin();
   arduboy.setFrameRate(30);
@@ -39,7 +43,6 @@ void loop() {
       drawGameScreen();
       handleGameInput();
       break;
-      
   }
   
   arduboy.display();
