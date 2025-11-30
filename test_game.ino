@@ -2,6 +2,7 @@
 #include "constants.h"
 #include "game_screens.h"
 #include "tangram_pieces.h"
+#include "levels.h"
 
 Arduboy2 arduboy;
 
@@ -12,6 +13,8 @@ int selectedOption = 0;
 TangramPiece pieces[7];
 int selectedPiece = 0;
 bool pieceGrabbed = false;
+LevelState currentLevel;
+GameState gameState;
 
 void setup() {
   arduboy.begin();
