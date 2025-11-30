@@ -3,6 +3,8 @@
 
 #include <Arduboy2.h>
 #include "tangram_pieces.h"
+#include "levels.h"
+#include "constants.h"
 
 struct Cursor {
   int x, y;
@@ -15,12 +17,11 @@ struct LevelState {
 };
 
 struct GameState {
-  int selectedPieceType; // Тип выбранной фигуры (0-6)
-  int heldPieceIndex;    // Индекс фигуры в руке в массиве pieces
+  int selectedPieceType; 
+  int heldPieceIndex;    
   bool pieceGrabbed;
 };
 
-// Структура для состояний кнопок
 struct ButtonStates {
   unsigned long aPressStartTime;
   unsigned long bPressStartTime;
@@ -33,7 +34,6 @@ struct ButtonStates {
   unsigned long cancelStartTime;
 };
 
-// Объявления функций экранов
 void drawMainMenu();
 void handleMainMenuInput();
 void drawLevelSelection();
@@ -43,7 +43,6 @@ void handleGameInput();
 void drawSandboxScreen();
 void handleSandboxInput();
 
-// Вспомогательные функции
 void drawTargetArea();
 void drawGameField();
 void drawCurrentPieceArea();
@@ -52,13 +51,11 @@ void drawTargetShape(int x, int y);
 void drawPieceInfo();
 void loadLevel(int level);
 
-// Функции режимов
 void handleNoPieceMode(ButtonStates& btnState);
 void handleCursorMode(ButtonStates& btnState); 
 void handlePieceInHandMode(ButtonStates& btnState);
 void handleButtonTransitions(ButtonStates& btnState);
 
-// Функции действий
 bool takePieceWithCursor();
 void createNewPiece();
 void rotatePiece(bool clockwise);
@@ -68,5 +65,8 @@ void toggleCursor();
 void exitLevel();
 void rotatePoint(int& x, int& y, int centerX, int centerY, int rotation);
 bool isPointInTangramPiece(int x, int y, TangramPiece piece);
+
+void drawInstructionScreen();
+void handleInstructionInput();
 
 #endif

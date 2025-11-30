@@ -30,9 +30,9 @@ void drawMainMenu() {
   
   arduboy.setCursor(25, 42);
   if (selectedOption == 1) {
-    arduboy.print("> SANDBOX");
+    arduboy.print("> INSTRUCTION");
   } else {
-    arduboy.print("  SANDBOX");
+    arduboy.print("  INSTRUCTION");
   }
 }
 
@@ -47,7 +47,7 @@ void handleMainMenuInput() {
     if (selectedOption == 0) {
       currentScreen = LEVEL_SELECT_SCREEN;
     } else {
-      currentScreen = SANDBOX_SCREEN;
+      currentScreen = INSTRUCTION_SCREEN;
     }
   }
 }
@@ -118,6 +118,8 @@ void drawGameScreen() {
 }
 
 void drawGameField() {
+  drawLevelSilhouette(selectedLevel);
+
   for (int i = 0; i < 7; i++) {
     if (pieces[i].placed) {
       drawTangramPiece(pieces[i].x, pieces[i].y, pieces[i].shape, pieces[i].rotation);
@@ -148,19 +150,15 @@ void drawPieceInfo() {
   arduboy.print(selectedLevel + 1);
 }
 
-// Функция для проверки попадания точки в фигуру
 bool isPointInPiece(int x, int y, TangramPiece piece) {
   int pieceW = getPieceWidth(piece.shape, piece.rotation);
   int pieceH = getPieceHeight(piece.shape, piece.rotation);
   
-  // Проверяем попадание в прямоугольную область фигуры
   bool hit = (x >= piece.x && x <= piece.x + pieceW &&
               y >= piece.y && y <= piece.y + pieceH);
   
   return hit;
 }
-
-// Функция для обработки долгого нажатия с индикатором прогресса
 bool handleLongPress(bool buttonPressed, unsigned long& startTime, int barX, int barY, int barWidth) {
   if (buttonPressed) {
     if (startTime == 0) {
@@ -185,6 +183,11 @@ bool handleLongPress(bool buttonPressed, unsigned long& startTime, int barX, int
 
 void handleGameInput() {
   static ButtonStates btnState = {0, 0, false, false, false, false, 0, 0, 0};
+
+  if (arduboy.pressed(UP_BUTTON) && arduboy.pressed(DOWN_BUTTON)) {
+    exitLevel();
+    return;
+  }
   
   handleButtonTransitions(btnState);
   
@@ -212,7 +215,6 @@ void handleButtonTransitions(ButtonStates& btnState) {
   }
   
   if (!gameState.pieceGrabbed) {
-    // Долгое нажатие A - только в обычном режиме (не в режиме курсора)
     if (!currentLevel.cursor.visible && btnState.aWasPressed && arduboy.pressed(A_BUTTON)) {
       unsigned long elapsed = millis() - btnState.aPressStartTime;
       
@@ -226,22 +228,19 @@ void handleButtonTransitions(ButtonStates& btnState) {
       }
     }
     
-    // Долгое нажатие B - в обычном режиме выход, в режиме курсора - скрыть курсор
     if (btnState.bWasPressed && arduboy.pressed(B_BUTTON)) {
       unsigned long elapsed = millis() - btnState.bPressStartTime;
       
       if (currentLevel.cursor.visible) {
-        // В режиме курсора - скрыть курсор (500ms)
         if (elapsed < 500) {
           int progress = (elapsed * 20) / 500;
           arduboy.drawRect(80, 55, 20, 4, WHITE);
           arduboy.fillRect(80, 55, progress, 4, WHITE);
         } else if (!btnState.bIsLongPress) {
           btnState.bIsLongPress = true;
-          currentLevel.cursor.visible = false; // Скрыть курсор
+          currentLevel.cursor.visible = false; 
         }
       } else {
-        // В обычном режиме - выход из уровня (1000ms)
         if (elapsed < 1000) {
           int progress = (elapsed * 20) / 1000;
           arduboy.drawRect(80, 55, 20, 4, WHITE);
@@ -294,21 +293,18 @@ void handleCursorMode(ButtonStates& btnState) {
   if (arduboy.justReleased(A_BUTTON) && btnState.aWasPressed) {
     if (!btnState.aIsLongPress) {
       bool hit = takePieceWithCursor();
-      // ДЕТАЛЬНАЯ ОТЛАДКА
       arduboy.setCursor(0, 55);
       if (hit) {
         arduboy.print("HIT: true ");
       } else {
         arduboy.print("HIT: false");
         
-        // Покажем координаты курсора и фигур для отладки
         arduboy.setCursor(0, 48);
         arduboy.print("C:");
         arduboy.print(currentLevel.cursor.x);
         arduboy.print(",");
         arduboy.print(currentLevel.cursor.y);
         
-        // Покажем координаты первой фигуры
         arduboy.setCursor(40, 48);
         arduboy.print("P0:");
         arduboy.print(pieces[0].x);
@@ -330,20 +326,19 @@ void handleCursorMode(ButtonStates& btnState) {
   }
 }
 
-// В функции drawGameScreen() изменить границы перемещения:
 void handlePieceInHandMode(ButtonStates& btnState) {
   const unsigned long ROTATION_DELAY = 300;
   
-  if (arduboy.pressed(LEFT_BUTTON) && pieces[gameState.heldPieceIndex].x > FIELD_X) {
+  if (arduboy.pressed(LEFT_BUTTON) && pieces[gameState.heldPieceIndex].x > 10) {
     pieces[gameState.heldPieceIndex].x--;
   }
-  if (arduboy.pressed(RIGHT_BUTTON) && pieces[gameState.heldPieceIndex].x < FIELD_X + FIELD_WIDTH - getPieceWidth(pieces[gameState.heldPieceIndex].shape, pieces[gameState.heldPieceIndex].rotation)) {
+  if (arduboy.pressed(RIGHT_BUTTON) && pieces[gameState.heldPieceIndex].x < 118 - getPieceWidth(pieces[gameState.heldPieceIndex].shape, pieces[gameState.heldPieceIndex].rotation)) {
     pieces[gameState.heldPieceIndex].x++;
   }
-  if (arduboy.pressed(UP_BUTTON) && pieces[gameState.heldPieceIndex].y > FIELD_Y) {
+  if (arduboy.pressed(UP_BUTTON) && pieces[gameState.heldPieceIndex].y > 20) {
     pieces[gameState.heldPieceIndex].y--;
   }
-  if (arduboy.pressed(DOWN_BUTTON) && pieces[gameState.heldPieceIndex].y < FIELD_Y + FIELD_HEIGHT - getPieceHeight(pieces[gameState.heldPieceIndex].shape, pieces[gameState.heldPieceIndex].rotation)) {
+  if (arduboy.pressed(DOWN_BUTTON) && pieces[gameState.heldPieceIndex].y < 55 - getPieceHeight(pieces[gameState.heldPieceIndex].shape, pieces[gameState.heldPieceIndex].rotation)) {
     pieces[gameState.heldPieceIndex].y++;
   }
 
@@ -382,20 +377,19 @@ void handlePieceInHandMode(ButtonStates& btnState) {
 bool takePieceWithCursor() {
   for (int i = 0; i < 7; i++) {
     if (!pieces[i].placed) {
-      // Проверяем все 4 пикселя курсора (2x2)
       for (int cx = currentLevel.cursor.x; cx < currentLevel.cursor.x + 2; cx++) {
         for (int cy = currentLevel.cursor.y; cy < currentLevel.cursor.y + 2; cy++) {
           if (isPointInPiece(cx, cy, pieces[i])) {
             gameState.heldPieceIndex = i;
             gameState.pieceGrabbed = true;
             currentLevel.cursor.visible = false;
-            return true; // Попадание в фигуру
+            return true; /
           }
         }
       }
     }
   }
-  return false; // Не попали ни в одну фигуру
+  return false; 
 }
 
 void createNewPiece() {
@@ -446,4 +440,36 @@ void toggleCursor() {
 
 void exitLevel() {
   currentScreen = LEVEL_SELECT_SCREEN;
+}
+
+// ==================== ЭКРАН ИНСТРУКЦИИ ====================
+void drawInstructionScreen() {
+  arduboy.setCursor(30, 2);
+  arduboy.print("INSTRUCTION");
+  
+  arduboy.drawLine(0, 12, 127, 12, WHITE);
+  
+  arduboy.setCursor(5, 15);
+  arduboy.print("A: Create piece");
+  
+  arduboy.setCursor(5, 23);
+  arduboy.print("B: Cancel/Exit");
+  
+  arduboy.setCursor(5, 31);
+  arduboy.print("Arrows: Move");
+  
+  arduboy.setCursor(5, 39);
+  arduboy.print("A/B: Rotate");
+  
+  arduboy.setCursor(5, 47);
+  arduboy.print("Long A: Place shape");
+  
+  arduboy.setCursor(40, 55);
+  arduboy.print("B: Back to Menu");
+}
+
+void handleInstructionInput() {
+  if (arduboy.justPressed(B_BUTTON)) {
+    currentScreen = MENU_SCREEN;
+  }
 }
